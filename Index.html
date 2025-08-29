@@ -1,0 +1,551 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shreyash Desai's Portfolio</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Inter Font -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+
+        /* Styles for the marquee animation */
+        @keyframes marquee {
+            0% { transform: translateX(0%); }
+            100% { transform: translateX(-50%); }
+        }
+        @keyframes marquee-fast {
+            0% { transform: translateX(0%); }
+            100% { transform: translateX(-50%); }
+        }
+        .animate-marquee {
+            animation: marquee 40s linear infinite;
+        }
+        .animate-marquee-fast {
+            animation: marquee-fast 25s linear infinite;
+        }
+
+        /* Typewriter cursor style */
+        .typewriter-cursor {
+            display: inline-block;
+            width: 8px;
+            height: 1.2em;
+            background-color: #f59e0b; /* yellow-500 */
+            animation: blink 0.7s infinite;
+            margin-left: 4px;
+            vertical-align: middle;
+        }
+
+        @keyframes blink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0; }
+        }
+        
+        /* Added bounce animation for thumbnails */
+        .thumbnail-bounce {
+            transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        .thumbnail-bounce:hover {
+            transform: scale(1.08) rotate(-2deg);
+        }
+    </style>
+    <!-- React CDN -->
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <!-- Babel for JSX transformation in browser -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+</head>
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+        // Inline SVG for LinkedIn Icon
+        const LinkedinIcon = ({ size = 24, className = "" }) => (
+            <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+                <path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"></path>
+                <rect width="4" height="12" x="2" y="9"></rect>
+                <circle cx="4" cy="4" r="2"></circle>
+            </svg>
+        );
+
+        // Inline SVG for Github Icon (Corrected Path)
+        const GithubIcon = ({ size = 24, className = "" }) => (
+            <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+                <path d="M9 19c-4.3 1.4-4.3-2.5-6-3m12 5v-3.5c0-1 .1-1.4-.5-2 2.8-.3 5.5-1.4 5.5-6.1 0-1.3-.5-2.4-1.3-3.2.1-.3.5-1.5-.1-3.2 0 0-1.1-.3-3.5 1.3a12.3 12.3 0 0 0-6.2 0C6.5 2.8 5.4 3.1 5.4 3.1c-.6 1.7-.2 2.9-.1 3.2-.8.8-1.3 1.9-1.3 3.2 0 4.7 2.7 5.8 5.5 6.1-.6.5-.9 1.2-.9 2.2v3.5z"/>
+            </svg>
+        );
+        
+        // UPDATED: Typewriter effect component to run only once per session
+        const Typewriter = ({ text, speed = 30, className = "", id }) => {
+            const [displayedText, setDisplayedText] = React.useState('');
+            const [isComplete, setIsComplete] = React.useState(false);
+            const storageKey = `typewriter_complete_${id}`;
+
+            React.useEffect(() => {
+                // If the animation has already run in this session, show the full text immediately.
+                if (sessionStorage.getItem(storageKey)) {
+                    setDisplayedText(text);
+                    setIsComplete(true);
+                    return;
+                }
+
+                setDisplayedText('');
+                setIsComplete(false);
+                let i = 0;
+                const typingInterval = setInterval(() => {
+                    if (i < text.length) {
+                        setDisplayedText(prev => prev + text.charAt(i));
+                        i++;
+                    } else {
+                        clearInterval(typingInterval);
+                        setIsComplete(true);
+                        // Mark this animation as complete for the current session.
+                        sessionStorage.setItem(storageKey, 'true');
+                    }
+                }, speed);
+
+                return () => clearInterval(typingInterval);
+            }, [text, speed, id, storageKey]);
+
+            return (
+                <p className={className}>
+                    {displayedText}
+                    {!isComplete && <span className="typewriter-cursor"></span>}
+                </p>
+            );
+        };
+
+
+        // The main portfolio component
+        const App = () => {
+            const [currentPage, setCurrentPage] = React.useState('projects');
+            const [isScrolled, setIsScrolled] = React.useState(false);
+
+            React.useEffect(() => {
+                window.scrollTo(0, 0);
+            }, [currentPage]);
+
+            React.useEffect(() => {
+                const handleScroll = () => setIsScrolled(window.scrollY > 50);
+                window.addEventListener('scroll', handleScroll);
+                return () => window.removeEventListener('scroll', handleScroll);
+            }, []);
+
+            const projects = [
+                { id: 'conversify', title: "Conversify", blurb: "Communication skills training platform that helps users improve their speaking abilities through interactive assessments, real-time feedback, and personalized learning experiences", type: "detail", tags: ["UI/UX", "Communication", "Assessment", "Learning Platform"], bgColor: "bg-purple-50", thumbnail: "https://i.postimg.cc/NFdyy0px/Picsart-25-08-27-17-18-55-243.png" },
+                { id: 'dams', title: "Departmental Asset Management System (DAMS)", blurb: "Digitized procurement, inventory, maintenance, student issues, and disposal across a college department with OTP-secured login, role-based dashboards, and multi-level approval workflows", type: "detail", tags: ["Full-Stack", "PHP", "MySQL", "Digital Workflow"], bgColor: "bg-blue-50", thumbnail: "https://i.postimg.cc/FsKpTk5N/IMG-20250827-172042.jpg" },
+                { id: 'cricket', title: "Cricket Gear Hub", blurb: "Complete e-commerce mobile app UI/UX design with 200+ wireframes and interactive prototypes, featuring comprehensive user research across customers, sellers, and admin interfaces", type: "detail", tags: ["Mobile App", "UI/UX", "E-commerce", "Figma"], bgColor: "bg-green-50", thumbnail: "https://i.postimg.cc/4y9MyKJD/file-00000000b3bc61f9a3363ef3e6b3b543.png" },
+                { id: 'dental', title: "PureGleam - Dental Clinic Management", blurb: "Responsive web application for dental clinics featuring service listings, patient reviews, appointment booking, and automated email notifications using modern web technologies", type: "detail", tags: ["Web App", "PHP", "Bootstrap", "Healthcare"], bgColor: "bg-teal-50", thumbnail: "https://i.postimg.cc/KzKppKg1/Picsart-25-08-27-17-32-03-876.jpg" }
+            ];
+
+            const traits = ["INNOVATIVE", "COLLABORATIVE", "METICULOUS", "AGILE", "CREATIVE"];
+
+            const testimonials = [
+                { quote: "Shreyash's work on the Departmental Asset Management System was crucial to its success. His problem-solving abilities and dedication to creating a robust and user-friendly solution were invaluable. He is a truly talented and diligent developer.", author: "Project Mentor of DAMS", role: "Professor @ Goa College of Engineering" },
+                { quote: "Working with Shreyash on Conversify was a great experience. His UI/UX design skills combined with his technical background made him invaluable to our team. He has a keen eye for user experience and creates intuitive interfaces.", author: "Team Member of Project Conversify", role: "Teammate @ Conversify" },
+                { quote: "Shreyash demonstrated excellent UI/UX design capabilities and attention to detail during his internship at FluxaticTM Global. His contributions to the Cricket Gear Hub project were instrumental in creating a highly engaging user experience.", author: "Internship Supervisor", role: "UI/UX Lead @ FluxaticTM Global" },
+                { quote: "As a team member for PureGleam - Dental Clinic Management, Shreyash was highly collaborative and brought valuable technical skills to the project. His efforts in implementing responsive design and backend features were commendable.", author: "Team Member of PureGleam", role: "Teammate @ PureGleam" }
+            ];
+
+            const experience = [
+                { role: "UI/UX Designer", org: "FluxaticTM Global", dates: "June-August 2024", bullets: [
+                    "Designed UI/UX for CricketGear Hub e-commerce mobile app with comprehensive user research across 3 user types",
+                    "Created 200+ wireframes and interactive prototypes in Figma for seamless user experience",
+                    "Developed complete component library with brand identity system including color palettes and typography standards"
+                ]}
+            ];
+
+            const education = [
+                { degree: "B.E. in Computer Engineering", org: "Goa College of Engineering", dates: "2021-2025", bullets: [
+                    "Final-year student specializing in database-driven systems and UI/UX design",
+                    "Proficient in PHP, MySQL, JavaScript, and modern web development frameworks",
+                    "Strong foundation in full-stack development and responsive design principles"
+                ]},
+                { degree: "Higher Secondary Education", org: "Government Higher Secondary School, Canacona", dates: "2020-2021 | 69%", bullets: [
+                    "Completed higher secondary education with focus on science and mathematics",
+                    "Built strong analytical and problem-solving foundation"
+                ]},
+                { degree: "Secondary Education", org: "Indian School Muscat, Oman", dates: "2018-2019 | 79.4%", bullets: [
+                    "International schooling background providing global perspective",
+                    "Enhanced English proficiency and cross-cultural communication skills",
+                    "Strong academic performance across multiple subjects"
+                ]}
+            ];
+            
+            const certificates = [
+                { name: "Human-Computer Interaction | NPTEL", link: "https://i.postimg.cc/QdjC0QNy/hci-nptel.jpg" },
+                { name: "Leadership and Team Effectiveness | NPTEL", link: "https://i.postimg.cc/MK7X7PwB/leadership-nptel.jpg" },
+                { name: "Privacy and Security in Online Social Media | NPTEL", link: "https://i.postimg.cc/C5yLDD6J/privacy-security-nptel.jpg" },
+                { name: "Social Network Analysis | NPTEL", link: "https://i.postimg.cc/J4VGBwfm/social-network-nptel.jpg" },
+                { name: "Elite Trader Funded Next", link: "https://i.postimg.cc/yx9xrnSw/Screenshot-20250827-195940.jpg" }
+            ];
+
+            const linkedInUrl = "https://www.linkedin.com/in/shreyash-desai-892a4a371?utm_source=share&utm_campaign=share_via&utm_content=profile&utm_medium=android_app";
+            const resumeUrl = "https://i.postimg.cc/J477rkrV/Screenshot-20250828-131322.jpg";
+            const githubUrl = "https://github.com/shreyash-desai";
+            const profileImageUrl = "https://i.postimg.cc/j2sSW8fK/IMG-20250414-153929-447.webp";
+
+            const Footer = () => (
+                <footer className="bg-black py-16 text-center border-t border-gray-800">
+                    <div className="container mx-auto px-6">
+                        <h2 className="text-3xl font-bold mb-2 text-white">Interested in a Collaboration?</h2>
+                        <p className="text-5xl font-extrabold text-yellow-500 mb-6">Let's Connect and Create</p>
+                        <div className="flex justify-center space-x-6 mb-6">
+                            <a href={linkedInUrl} target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:text-white"><LinkedinIcon size={28} /></a>
+                            <a href={githubUrl} target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:text-white"><GithubIcon size={28} /></a>
+                        </div>
+                        <a href="mailto:shreyashdesai60@gmail.com" className="text-lg text-gray-300 hover:text-white">shreyashdesai60@gmail.com</a>
+                        <p className="text-sm text-gray-600 mt-12">@Shreyash Desai 2025</p>
+                    </div>
+                </footer>
+            );
+
+            const Navigation = () => (
+                <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${isScrolled ? 'bg-black bg-opacity-70 backdrop-blur-sm' : 'bg-transparent'}`}>
+                    <div className="container mx-auto px-6 py-4 flex justify-between items-center">
+                        <button onClick={() => setCurrentPage('projects')} className="text-2xl font-light italic text-white hover:text-yellow-500 transition-colors">sd</button>
+                        <div className="flex items-center space-x-6">
+                            <button onClick={() => setCurrentPage('projects')} className={`text-sm transition-colors ${currentPage === 'projects' || projects.some(p => p.id === currentPage) ? 'text-white border-b border-yellow-500 pb-1' : 'text-gray-400 hover:text-white'}`}>Projects</button>
+                            <button onClick={() => setCurrentPage('about')} className={`text-sm transition-colors ${currentPage === 'about' ? 'text-white border-b border-yellow-500 pb-1' : 'text-gray-400 hover:text-white'}`}>About</button>
+                            <a href={resumeUrl} target="_blank" rel="noopener noreferrer" className="bg-yellow-500 text-black px-4 py-2 rounded-full text-sm font-semibold hover:bg-yellow-400 transition-colors">Resume →</a>
+                        </div>
+                    </div>
+                </nav>
+            );
+
+            const Marquee = ({ items }) => {
+                const duplicatedItems = [...items, ...items, ...items, ...items];
+                return (
+                    <div className="relative flex overflow-x-hidden bg-black text-white py-4 my-16 border-y border-gray-800">
+                        <div className="py-2 animate-marquee whitespace-nowrap flex">
+                            {duplicatedItems.map((trait, index) => (
+                                <span key={index} className="text-2xl font-bold mx-4 flex-shrink-0">{trait}<span className="text-yellow-500 mx-4">•</span></span>
+                            ))}
+                        </div>
+                    </div>
+                );
+            };
+
+            const TestimonialMarquee = ({ testimonials }) => {
+                const duplicatedTestimonials = [...testimonials, ...testimonials];
+                return (
+                     <div className="relative flex overflow-x-hidden py-10 bg-gray-900 border-y border-gray-800">
+                        <div className="py-2 animate-marquee-fast flex">
+                            {duplicatedTestimonials.map((testimonial, index) => (
+                                <div key={index} className="mx-4 p-6 rounded-lg text-left shadow-lg bg-gray-800 max-w-[calc(100vw-48px)] sm:max-w-sm flex-shrink-0">
+                                    <p className="text-gray-300 italic mb-4 text-sm leading-relaxed">"{testimonial.quote}"</p>
+                                    <p className="font-bold text-white text-base">{testimonial.author}</p>
+                                    <p className="text-sm text-yellow-500">{testimonial.role}</p>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                );
+            };
+
+            const ProjectCard = ({ project }) => (
+                <div onClick={() => setCurrentPage(project.id)} className={`p-6 rounded-lg shadow-lg cursor-pointer thumbnail-bounce ${project.bgColor}`}>
+                    <div className="relative h-56 mb-4 rounded-md overflow-hidden bg-gray-200">
+                        <img src={project.thumbnail} alt={project.title} className="w-full h-full object-cover" onError={(e) => { e.target.style.display = 'none'; e.target.nextSibling.style.display = 'flex'; }} />
+                        <div className="absolute inset-0 bg-gray-200 items-center justify-center text-gray-500 hidden">Preview Image</div>
+                    </div>
+                    <h3 className="text-xl font-bold mb-2 text-gray-800">{project.title}</h3>
+                    <p className="text-gray-600 text-sm mb-4">{project.blurb}</p>
+                    <div className="flex flex-wrap gap-2">
+                        {project.tags.map((tag, i) => <span key={i} className="bg-gray-200 text-gray-700 text-xs px-2 py-1 rounded-full">{tag}</span>)}
+                    </div>
+                </div>
+            );
+            
+            // Reusable image component with hover effect
+            const ProjectImage = ({ src, alt, caption }) => (
+                <div className="mb-8 cursor-pointer transform hover:scale-105 transition-transform duration-300 group">
+                    <img src={src} alt={alt} className="rounded-lg shadow-lg w-full" onError={(e) => { e.target.style.display = 'none'; e.target.nextSibling.style.display = 'flex'; }} />
+                    <div className="bg-gray-800 p-4 rounded-lg mt-2 text-center text-gray-400 hidden">Image loading...</div>
+                    {caption && <p className="text-center mt-2 text-sm text-gray-500 group-hover:text-yellow-400 transition-colors">{caption}</p>}
+                </div>
+            );
+
+            const ConversifyProject = () => (
+                <div className="bg-black text-white min-h-screen">
+                    <div className="container mx-auto px-6 py-24">
+                        <button onClick={() => setCurrentPage('projects')} className="text-yellow-500 hover:text-yellow-400 mb-8 flex items-center gap-2">← Back to Projects</button>
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+                            <div className="md:col-span-1"><div className="sticky top-24"><p className="text-sm text-gray-400">UI/UX Designer</p><p className="text-sm text-gray-400">4 months</p><p className="text-sm text-gray-400">2024</p></div></div>
+                            <div className="md:col-span-2">
+                                <h1 className="text-5xl font-bold mb-4">Conversify</h1>
+                                <p className="text-lg text-gray-300 mb-8">A communication skills training platform that helps users improve their speaking abilities through interactive assessments, real-time feedback, and personalized learning experiences.</p>
+                                <div className="border-t border-b border-gray-700 py-4 mb-8"><p><span className="font-semibold">TEAM:</span> Group of 2</p></div>
+                                <h2 className="text-3xl font-bold mb-4">Project Vision</h2>
+                                <p className="mb-8 text-gray-400">Conversify addresses the growing need for effective communication skills in both personal and professional settings. The platform provides users with tools to "elevate their communication skills effortlessly" through personalized speaking assessments and comprehensive feedback systems.</p>
+                                <h2 className="text-3xl font-bold mb-4">Core Features</h2>
+                                <ul className="list-disc list-inside mb-8 text-gray-400 space-y-2">
+                                    <li>Interactive Speaking Tests with real-time voice recording and analysis</li>
+                                    <li>Comprehensive Scoring System across multiple communication metrics</li>
+                                    <li>Three-Step Learning Process: Record, Learn, and Repeat</li>
+                                    <li>Personalized feedback on pronunciation, fluency, and accuracy</li>
+                                    <li>Progress tracking and continuous improvement recommendations</li>
+                                </ul>
+                                <h2 className="text-3xl font-bold mb-4">UI Design Screens</h2>
+                                <ProjectImage src="https://i.postimg.cc/NFdyy0px/Picsart-25-08-27-17-18-55-243.png" alt="Conversify Landing" caption="Landing Page" />
+                                <ProjectImage src="https://i.postimg.cc/wjZmc7Hf/Picsart-25-08-27-17-23-24-610.png" alt="Conversify Dashboard" caption="User Dashboard" />
+                                <h2 className="text-3xl font-bold mb-4">User Experience Goals</h2>
+                                <p className="mb-8 text-gray-400">The platform targets both personal and professional development, helping users overcome communication barriers and build confidence in their speaking abilities. The design prioritizes user engagement through clear visual feedback and intuitive interaction patterns.</p>
+                                <div className="flex flex-wrap gap-2 mb-12">{["UI/UX Design", "Figma", "User Research", "Communication Skills", "Learning Platform"].map((tech, i) => <span key={i} className="bg-gray-800 text-yellow-400 text-sm px-3 py-1 rounded-full">{tech}</span>)}</div>
+                            </div>
+                        </div>
+                    </div>
+                    <Footer />
+                </div>
+            );
+
+            const DAMSProject = () => (
+                <div className="bg-black text-white min-h-screen">
+                    <div className="container mx-auto px-6 py-24">
+                        <button onClick={() => setCurrentPage('projects')} className="text-yellow-500 hover:text-yellow-400 mb-8 flex items-center gap-2">← Back to Projects</button>
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+                            <div className="md:col-span-1"><div className="sticky top-24"><p className="text-sm text-gray-400">Full-Stack Developer</p><p className="text-sm text-gray-400">6 months</p><p className="text-sm text-gray-400">2024</p></div></div>
+                            <div className="md:col-span-2">
+                                <h1 className="text-5xl font-bold mb-4">Departmental Asset Management System (DAMS)</h1>
+                                <p className="text-lg text-gray-300 mb-8">Digitized procurement, inventory, maintenance, student issues, and disposal across a college department. Replaced paperwork with digital workflows—saving paper, reducing costs, and boosting efficiency.</p>
+                                <div className="border-t border-b border-gray-700 py-4 mb-8"><p><span className="font-semibold">TEAM:</span> Group of 5</p></div>
+                                <h2 className="text-3xl font-bold mb-4">The Challenge</h2>
+                                <p className="mb-8 text-gray-400">The college department struggled with manual paperwork processes for asset management, leading to inefficient procurement workflows, poor inventory tracking, delayed maintenance requests, and cumbersome disposal procedures. The existing system was prone to errors, document loss, and lacked proper audit trails.</p>
+                                <h2 className="text-3xl font-bold mb-4">The Solution</h2>
+                                <ul className="list-disc list-inside mb-8 text-gray-400 space-y-2">
+                                    <li>OTP-secured authentication system for enhanced security</li>
+                                    <li>Role-based dashboards for different user types (admin, staff, students)</li>
+                                    <li>Multi-level approval workflows for procurement and disposal</li>
+                                    <li>Digital signatures and automated email notifications</li>
+                                    <li>Real-time inventory synchronization and maintenance tracking</li>
+                                </ul>
+                                <h2 className="text-3xl font-bold mb-4">System Screenshots</h2>
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-8">
+                                    <ProjectImage src="https://i.postimg.cc/FsKpTk5N/IMG-20250827-172042.jpg" alt="DAMS Landing" caption="Landing Page" />
+                                    <ProjectImage src="https://i.postimg.cc/nr3kHpmy/IMG-20250827-172057.jpg" alt="DAMS Forms" caption="Form Trackers Checklist" />
+                                    <ProjectImage src="https://i.postimg.cc/CL6NXMSD/IMG-20250827-172109.jpg" alt="DAMS Maintenance" caption="Maintenance Module" />
+                                    <ProjectImage src="https://i.postimg.cc/k4dwsj9p/IMG-20250827-172127.jpg" alt="DAMS Disposal" caption="Disposal Module" />
+                                </div>
+                                <h2 className="text-3xl font-bold mb-4">Technical Implementation</h2>
+                                <p className="mb-8 text-gray-400">Built using PHP for server-side logic, MySQL for robust data management, and responsive frontend with HTML, CSS, and JavaScript. Implemented AJAX for seamless user interactions and PDF generation for document management.</p>
+                                <div className="flex flex-wrap gap-2 mb-12">{["PHP", "MySQL", "JavaScript", "HTML/CSS", "AJAX", "PDF Generation"].map((tech, i) => <span key={i} className="bg-gray-800 text-yellow-400 text-sm px-3 py-1 rounded-full">{tech}</span>)}</div>
+                            </div>
+                        </div>
+                    </div>
+                    <Footer />
+                </div>
+            );
+
+            const DentalProject = () => (
+                <div className="bg-black text-white min-h-screen">
+                    <div className="container mx-auto px-6 py-24">
+                        <button onClick={() => setCurrentPage('projects')} className="text-yellow-500 hover:text-yellow-400 mb-8 flex items-center gap-2">← Back to Projects</button>
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+                            <div className="md:col-span-1"><div className="sticky top-24"><p className="text-sm text-gray-400">Web Developer</p><p className="text-sm text-gray-400">3 months</p><p className="text-sm text-gray-400">2024</p></div></div>
+                            <div className="md:col-span-2">
+                                <h1 className="text-5xl font-bold mb-4">PureGleam - Dental Clinic Management</h1>
+                                <p className="text-lg text-gray-300 mb-8">A responsive web application for dental clinics featuring service listings, patient reviews, appointment booking, and automated email notifications using modern web technologies.</p>
+                                <div className="border-t border-b border-gray-700 py-4 mb-8"><p><span className="font-semibold">TEAM:</span> Group of 2</p></div>
+                                <h2 className="text-3xl font-bold mb-4">About the Project</h2>
+                                <p className="mb-8 text-gray-400">PureGleam addresses the need for modern dental clinics to have an online presence that facilitates patient interaction, appointment scheduling, and service promotion. The platform bridges the gap between traditional dental practices and digital patient engagement.</p>
+                                <h2 className="text-3xl font-bold mb-4">Key Features</h2>
+                                <ul className="list-disc list-inside mb-8 text-gray-400 space-y-2">
+                                    <li>Comprehensive service listings with detailed descriptions and pricing</li>
+                                    <li>Patient review and rating system for service feedback</li>
+                                    <li>Online appointment booking with calendar integration</li>
+                                    <li>Automated email notifications for appointments and reminders</li>
+                                    <li>Responsive design optimized for all devices</li>
+                                </ul>
+                                <h2 className="text-3xl font-bold mb-4">Application Screenshots</h2>
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-8">
+                                    <ProjectImage src="https://i.postimg.cc/KzKppKg1/Picsart-25-08-27-17-32-03-876.jpg" alt="Dental Home" caption="Homepage / Landing Page" />
+                                    <ProjectImage src="https://i.postimg.cc/jj3kh6CV/Picsart-25-08-27-17-32-26-627.jpg" alt="Dental About" caption="About Us Section" />
+                                    <ProjectImage src="https://i.postimg.cc/RFjskMcX/Picsart-25-08-27-17-32-48-159.jpg" alt="Dental Services" caption="Our Services Section" />
+                                    <ProjectImage src="https://i.postimg.cc/d0VxdNsm/Picsart-25-08-27-17-33-12-635.jpg" alt="Dental Process" caption="Work Process Section" />
+                                    <div className="sm:col-span-2"><ProjectImage src="https://i.postimg.cc/8zHY7gSz/Picsart-25-08-27-17-33-34-220.jpg" alt="Dental Appointment" caption="Make Appointment Section" /></div>
+                                </div>
+                                <h2 className="text-3xl font-bold mb-4">Technical Stack</h2>
+                                <p className="mb-8 text-gray-400">Developed using PHP for backend functionality, MySQL for data management, Bootstrap for responsive design, and integrated email services for automated notifications. The application ensures cross-browser compatibility and optimal performance across all devices.</p>
+                                <div className="flex flex-wrap gap-2 mb-12">{["PHP", "MySQL", "HTML/CSS", "Bootstrap", "JavaScript", "Email Integration"].map((tech, i) => <span key={i} className="bg-gray-800 text-yellow-400 text-sm px-3 py-1 rounded-full">{tech}</span>)}</div>
+                            </div>
+                        </div>
+                    </div>
+                    <Footer />
+                </div>
+            );
+
+            const CricketProject = () => {
+                const [showPrototype, setShowPrototype] = React.useState(false);
+                // UPDATED: Correct Figma embed URL
+                const figmaEmbedUrl = "https://www.figma.com/embed?embed_host=share&url=https%3A%2F%2Fwww.figma.com%2Fproto%2Fm4MxV16zppie7RuJkmuocz%3Fnode-id%3D152-688";
+
+                return (
+                    <div className="bg-black text-white min-h-screen">
+                        {showPrototype && (
+                            <div className="fixed inset-0 bg-black bg-opacity-80 flex items-center justify-center z-50 p-4" onClick={() => setShowPrototype(false)}>
+                                <div className="relative w-full max-w-sm h-[80vh] bg-black border-4 border-gray-700 rounded-[40px] p-4 shadow-2xl" onClick={e => e.stopPropagation()}>
+                                    <div className="absolute top-0 left-1/2 -translate-x-1/2 w-24 h-6 bg-black rounded-b-xl"></div>
+                                    <iframe
+                                        className="w-full h-full rounded-[24px] bg-white"
+                                        src={figmaEmbedUrl}
+                                        allowFullScreen
+                                    ></iframe>
+                                    <button onClick={() => setShowPrototype(false)} className="absolute -top-4 -right-4 bg-yellow-500 text-black rounded-full h-10 w-10 flex items-center justify-center font-bold text-xl">&times;</button>
+                                </div>
+                            </div>
+                        )}
+                        <div className="container mx-auto px-6 py-24">
+                            <button onClick={() => setCurrentPage('projects')} className="text-yellow-500 hover:text-yellow-400 mb-8 flex items-center gap-2">← Back to Projects</button>
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+                                <div className="md:col-span-1"><div className="sticky top-24"><p className="text-sm text-gray-400">UI/UX Designer</p><p className="text-sm text-gray-400">3 months</p><p className="text-sm text-gray-400">2024</p></div></div>
+                                <div className="md:col-span-2">
+                                    <h1 className="text-5xl font-bold mb-4">Cricket Gear Hub</h1>
+                                    <p className="text-lg text-gray-300 mb-8">Complete e-commerce mobile app UI/UX design with 200+ wireframes and interactive prototypes, featuring comprehensive user research across customers, sellers, and admin interfaces.</p>
+                                    <div className="border-t border-b border-gray-700 py-4 mb-8"><p><span className="font-semibold">TEAM:</span> Group of 5</p></div>
+                                    <h2 className="text-3xl font-bold mb-4">Project Vision</h2>
+                                    <p className="mb-8 text-gray-400">Cricket Gear Hub was designed to address the fragmented market for cricket equipment, creating a unified e-commerce platform that connects buyers, sellers, and administrators. The goal was to build an intuitive, user-friendly mobile experience that simplifies the process of buying and selling specialized sports equipment.</p>
+                                    <h2 className="text-3xl font-bold mb-4">Core Features</h2>
+                                    <ul className="list-disc list-inside mb-8 text-gray-400 space-y-2">
+                                        <li>Interactive Product Catalog with detailed listings and filtering options</li>
+                                        <li>Intuitive Checkout Flow with multiple payment options</li>
+                                        <li>User Research-backed design for three distinct user types</li>
+                                        <li>Comprehensive Admin and Seller Dashboards for inventory and sales management</li>
+                                        <li>Interactive Prototypes to showcase the user journey and design decisions</li>
+                                    </ul>
+                                    <h2 className="text-3xl font-bold mb-4">Interactive Prototype</h2>
+                                    <p className="mb-4 text-gray-400">Experience the complete Cricket Gear Hub mobile app through this interactive prototype. Navigate through the app's key screens and flows directly on this page.</p>
+                                    <button onClick={() => setShowPrototype(true)} className="inline-block bg-yellow-500 text-black px-6 py-3 rounded-full font-semibold hover:bg-yellow-400 transition-colors mb-8">Launch Mobile Prototype</button>
+                                    <h2 className="text-3xl font-bold mb-4">User Experience Goals</h2>
+                                    <p className="mb-8 text-gray-400">The primary goal was to make the e-commerce journey seamless and delightful for all users. The design prioritized accessibility, clear navigation, and a modern aesthetic that resonates with cricket enthusiasts.</p>
+                                    <div className="flex flex-wrap gap-2 mb-12">{["Mobile App Design", "UI/UX", "User Research", "E-commerce", "Figma", "Prototype"].map((tech, i) => <span key={i} className="bg-gray-800 text-yellow-400 text-sm px-3 py-1 rounded-full">{tech}</span>)}</div>
+                                </div>
+                            </div>
+                        </div>
+                        <Footer />
+                    </div>
+                );
+            };
+
+            const ProjectsPage = () => {
+                const bioText = "Hi, I am Shreyash, a final-year Computer Engineering student at Goa College of Engineering. I'm skilled in database-driven systems and UI/UX design, with experience creating functional, user-centric solutions that bridge technical implementation with great user experience. With my international schooling background in Oman, I'm fluent in English and passionate about creating digital solutions that make a real impact.";
+                return (
+                    <div className="bg-black text-white">
+                        <header className="min-h-screen flex flex-col items-center justify-center text-center px-6 py-24">
+                             <div className="container mx-auto flex flex-col-reverse md:flex-row items-center justify-between gap-12">
+                                <div className="text-center md:text-left flex-1 md:pr-12">
+                                    <h1 className="text-5xl md:text-6xl font-extrabold mb-4 text-white">Shreyash Desai</h1>
+                                    <p className="text-lg md:text-xl text-gray-300 mb-6">Computer Engineering Graduate, 2025</p>
+                                    <Typewriter id="hero-bio" text={bioText} speed={25} className="max-w-2xl mx-auto md:mx-0 text-gray-400 mb-8" />
+                                </div>
+                                <div className="flex-shrink-0">
+                                    <div className="w-48 h-48 sm:w-64 sm:h-64 rounded-full overflow-hidden border-4 border-yellow-500 shadow-lg">
+                                        <img src={profileImageUrl} alt="Shreyash Desai" className="w-full h-full object-cover" />
+                                    </div>
+                                </div>
+                            </div>
+                        </header>
+                        <Marquee items={traits} />
+                        <main className="container mx-auto px-6 py-16">
+                             <div className="text-center mb-12">
+                                <h2 className="text-4xl font-bold text-white">Showcasing My Work</h2>
+                                <p className="text-lg text-gray-500">from 2022 till date</p>
+                            </div>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                                {projects.map((project) => <ProjectCard key={project.id} project={project} />)}
+                            </div>
+                        </main>
+                        <section className="py-16">
+                            <div className="container mx-auto px-6 text-center">
+                                <h2 className="text-4xl font-bold mb-4 text-white">Valuable Feedback</h2>
+                                <p className="text-lg text-gray-500 mb-12">Perspectives from my professional circle</p>
+                            </div>
+                            <TestimonialMarquee testimonials={testimonials} />
+                        </section>
+                        <Footer />
+                    </div>
+                );
+            };
+
+            const AboutPage = () => {
+                const aboutText1 = "Hi, I am Shreyash, a final-year Computer Engineering student at Goa College of Engineering. Skilled in database-driven systems and UI/UX design, with experience creating functional, user-centric solutions that bridge technical implementation with great user experience.";
+                const aboutText2 = "With NPTEL certifications in HCI, Leadership, Privacy and Security in Social Media, and Social Network Analysis, I bring both technical depth and design thinking to every project. Fluent in English due to my schooling background in Oman, I'm passionate about creating digital solutions that make a real impact.";
+
+                return (
+                    <div className="bg-black text-white min-h-screen">
+                        <div className="container mx-auto px-6 py-24">
+                            <div className="max-w-4xl mx-auto">
+                                <p className="text-yellow-500 font-semibold mb-4 tracking-wide">PRIORITIZING FUNCTIONALITY AND GREAT USER EXPERIENCE</p>
+                                <h1 className="text-5xl font-extrabold mb-6">Shreyash Desai</h1>
+                                <div className="text-lg text-gray-300 mb-12 space-y-4">
+                                    <Typewriter id="about-bio-1" text={aboutText1} speed={25} />
+                                    <Typewriter id="about-bio-2" text={aboutText2} speed={25} />
+                                </div>
+                                <div className="border-t border-gray-700 pt-12 mb-12">
+                                    <h2 className="text-3xl font-bold mb-8 text-yellow-500 tracking-wider">EXPERIENCE</h2>
+                                    {experience.map((job, index) => (
+                                        <div key={index} className="mb-8 grid grid-cols-1 md:grid-cols-4 gap-4">
+                                            <div className="md:col-span-1"><p className="font-semibold text-white text-lg">{job.role}</p><p className="text-base text-gray-300">{job.org}</p><p className="text-sm text-yellow-500">{job.dates}</p></div>
+                                            <div className="md:col-span-3"><ul className="list-disc list-inside text-gray-400 space-y-2">{job.bullets.map((bullet, i) => <li key={i}>{bullet}</li>)}</ul></div>
+                                        </div>
+                                    ))}
+                                </div>
+                                <div className="border-t border-gray-700 pt-12 mb-12">
+                                    <h2 className="text-3xl font-bold mb-8 text-yellow-500 tracking-wider">EDUCATION</h2>
+                                    {education.map((edu, index) => (
+                                         <div key={index} className="mb-8 grid grid-cols-1 md:grid-cols-4 gap-4">
+                                            <div className="md:col-span-1"><p className="font-semibold text-white text-lg">{edu.degree}</p><p className="text-base text-gray-300">{edu.org}</p><p className="text-sm text-yellow-500">{edu.dates}</p></div>
+                                            <div className="md:col-span-3"><ul className="list-disc list-inside text-gray-400 space-y-2">{edu.bullets.map((bullet, i) => <li key={i}>{bullet}</li>)}</ul></div>
+                                        </div>
+                                    ))}
+                                </div>
+                                <div className="border-t border-gray-700 pt-12 mb-12">
+                                    <h2 className="text-3xl font-bold mb-8 text-yellow-500 tracking-wider">CERTIFICATIONS</h2>
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                                        {certificates.map((cert, index) => (
+                                            <a key={index} href={cert.link} target="_blank" rel="noopener noreferrer" className="bg-gray-800 p-4 rounded-lg hover:bg-gray-700 transition-transform transform hover:scale-105 group">
+                                                <p className="font-semibold mb-2 text-white">{cert.name}</p>
+                                                <span className="text-sm text-yellow-500 group-hover:underline">View Certificate →</span>
+                                            </a>
+                                        ))}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <Footer />
+                    </div>
+                );
+            };
+
+            const renderCurrentPage = () => {
+                switch (currentPage) {
+                    case 'projects': return <ProjectsPage />;
+                    case 'about': return <AboutPage />;
+                    case 'dams': return <DAMSProject />;
+                    case 'dental': return <DentalProject />;
+                    case 'cricket': return <CricketProject />;
+                    case 'conversify': return <ConversifyProject />;
+                    default: return <ProjectsPage />;
+                }
+            };
+
+            return (
+                <div className="bg-black font-sans">
+                    <Navigation />
+                    {renderCurrentPage()}
+                </div>
+            );
+        };
+
+        ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+    </script>
+</body>
+</html>
